@@ -16,6 +16,7 @@
  * QR Code generation: qrcode.js by davidshimjs, forked by Willtech
  *
  * Date: 2025-10-28
+ * Reaper Harvester / Wills / Professor. Damian A. James Williamson Grad. — with Microsoft Copilot as collaborative co‑author; qrcode.js by davidshimjs (forked by Willtech).
  */
 
 session_start();
