@@ -12,24 +12,26 @@ This project converts fiat amounts into BTC using live exchange rates, estimates
 - **Freshness check**: Uses `(int)$datetime` safeguards to reject stale requests older than 120 seconds.  
 - **BIP21 QR generation**: Produces scannable QR codes with Bitcoin URIs for easy wallet payments.  
 - **Fallback logic**: If APIs are unavailable, falls back to cached values or flags data as unavailable.  
+- **Payment Notification**: Notification when transaction is detected in mempool.  
 
 ---
 
 ## 📂 Project Structure
 ```
 BitPay/
- ├── .htaccess            # .htaccess
- ├── index.php            # Main calculator interface
- ├── auth.php             # Authentication handler
- ├── price.php            # Fetches and caches prices + fees
- ├── save_settings.php    # Settings handler
- ├── .users/.htaccess     # .htaccess
- ├── .users/lockouts.json # User control
- ├── assets/.htaccess     # .htaccess
- ├── assets/qrcode.min.js # QR Code generator
- ├── data/.htaccess       # .htaccess
- ├── data/prices.json     # Cached data store
- └── data/settings.json   # Settings data store
+ ├── .htaccess                   # .htaccess
+ ├── index.php                   # Main calculator interface
+ ├── auth.php                    # Authentication handler
+ ├── monitor_mempool_address.php # Monitor for transaction in mempool
+ ├── price.php                   # Fetches and caches prices + fees
+ ├── save_settings.php           # Settings handler
+ ├── .users/.htaccess            # .htaccess
+ ├── .users/lockouts.json        # User control
+ ├── assets/.htaccess            # .htaccess
+ ├── assets/qrcode.min.js        # QR Code generator
+ ├── data/.htaccess              # .htaccess
+ ├── data/prices.json            # Cached data store
+ └── data/settings.json          # Settings data store
 ```
 
 ---
