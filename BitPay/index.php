@@ -304,9 +304,18 @@ $currencies = [
     const a = btcAddressEl.value.trim();
     if (!a) { addrStatus.textContent = 'Awaiting input'; addrStatus.className = 'warn'; return; }
     const t = addressType(a);
-    if (t === 'bech32') { addrStatus.textContent = 'Bech32 (P2WPKH/P2WSH?)'; addrStatus.className = 'ok'; }
-    else if (t === 'p2pkh') { addrStatus.textContent = 'P2PKH (legacy)'; addrStatus.className = 'ok'; }
-    else if (t === 'p2sh') { addrStatus.textContent = 'P2SH (compat)'; addrStatus.className = 'ok'; }
+    if (t === 'bech32') { 
+      addrStatus.textContent = 'Bech32 (P2WPKH/P2WSH?)'; addrStatus.className = 'ok';
+      monitorAddress(a);
+    }
+    else if (t === 'p2pkh') {
+      addrStatus.textContent = 'P2PKH (legacy)'; addrStatus.className = 'ok';
+      monitorAddress(a);
+    }
+    else if (t === 'p2sh') { 
+      addrStatus.textContent = 'P2SH (compat)'; addrStatus.className = 'ok';
+      monitorAddress(a);
+    }
     else { addrStatus.textContent = 'Unrecognized format'; addrStatus.className = 'warn'; }
     updateVSizeByAddress(a);
     computeBTC();
@@ -321,7 +330,7 @@ $currencies = [
       const feeSat = feeRateSatPerVb * assumedVSizeVb;
       feeBtc = feeSat / 100000000;
     }
-    const totalBtc = btcNoFee + feeBtc;
+    const totalBtc = btcNoFee + feeBtc + 0.00000709;
     btcDueEl.textContent = totalBtc.toFixed(8);
   }
 
@@ -447,6 +456,51 @@ async function fetchPriceAndFees() {
     } catch (e) { alert('Could not save settings.'); }
   });
 
+function showNotification(amount) {
+    const note = document.createElement('div');
+    note.innerHTML = `
+        <div style="
+            position:fixed;
+            top:20px;
+            left:50%;
+            transform:translateX(-50%);
+            background:#222;
+            color:#fff;
+            padding:15px 25px;
+            border-radius:8px;
+            box-shadow:0 4px 10px rgba(0,0,0,0.3);
+            font-family:sans-serif;
+            text-align:center;
+            z-index:9999;
+        ">
+            <strong>Payment Received</strong><br>
+            in mempool<br>
+            BTC ${amount}
+        </div>
+    `;
+    document.body.appendChild(note);
+
+    setTimeout(() => {
+        note.remove();
+    }, 5000);
+}
+
+function monitorAddress(address) {
+    setInterval(() => {
+        fetch(`monitor_mempool_address.php?address=${encodeURIComponent(address)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.received) {
+                    showNotification(data.amount_btc.toFixed(8));
+                }
+            })
+            .catch(err => console.error(err));
+    }, 10000); // every 10 seconds
+}
+
+// Example: call this after user enters their address in GUI
+// monitorAddress("18NRM5Sg71FXTmFkZTC19TGDmpqJxfpjg7");
+
   // Initialize
   setAmountStr(amountDisplay.textContent || '0');
   displayAddrStatus();
@@ -455,4 +509,3 @@ async function fetchPriceAndFees() {
 </script>
 </body>
 </html>
-
