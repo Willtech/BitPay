@@ -304,9 +304,18 @@ $currencies = [
     const a = btcAddressEl.value.trim();
     if (!a) { addrStatus.textContent = 'Awaiting input'; addrStatus.className = 'warn'; return; }
     const t = addressType(a);
-    if (t === 'bech32') { addrStatus.textContent = 'Bech32 (P2WPKH/P2WSH?)'; addrStatus.className = 'ok'; }
-    else if (t === 'p2pkh') { addrStatus.textContent = 'P2PKH (legacy)'; addrStatus.className = 'ok'; }
-    else if (t === 'p2sh') { addrStatus.textContent = 'P2SH (compat)'; addrStatus.className = 'ok'; }
+    if (t === 'bech32') { 
+      addrStatus.textContent = 'Bech32 (P2WPKH/P2WSH?)'; addrStatus.className = 'ok';
+      monitorAddress(a);
+    }
+    else if (t === 'p2pkh') {
+      addrStatus.textContent = 'P2PKH (legacy)'; addrStatus.className = 'ok';
+      monitorAddress(a);
+    }
+    else if (t === 'p2sh') { 
+      addrStatus.textContent = 'P2SH (compat)'; addrStatus.className = 'ok';
+      monitorAddress(a);
+    }
     else { addrStatus.textContent = 'Unrecognized format'; addrStatus.className = 'warn'; }
     monitorAddress(a);
     updateVSizeByAddress(a);
@@ -501,4 +510,3 @@ function monitorAddress(address) {
 </script>
 </body>
 </html>
-
