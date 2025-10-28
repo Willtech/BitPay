@@ -1,0 +1,11 @@
+# DISABLE DIRECTORY INDEXES
+Options -Indexes
+
+RewriteEngine On
+RewriteCond /home/willtech/home/willtech/bitpay%{REQUEST_URI} !-d
+RewriteCond /home/willtech/home/willtech/bitpay%{REQUEST_URI} !-f
+RewriteRule .* https://messenger.willtech.com.au/ [R=404,L]
+
+RewriteCond %{REQUEST_URI} !friendly.php
+RewriteRule .* https://bitpay.willtech.com.au/ [R=404,L]
+

@@ -1,0 +1,47 @@
+# PHP settings
+php_value date.timezone Australia/Melbourne
+
+php_value session.auto_start 1
+php_value session.cache_expire 86400
+php_value session.gc_maxlifetime 86400
+php_value session.cookie_lifetime 86400
+php_value session.cookie_path /
+php_value session.name SiteUser
+php_value session.save_path /home/willtech/sessions/
+php_value session.use_trans_sid 1
+php_value session.use_cookies 1
+
+# DISABLE DIRECTORY INDEXES
+Options -Indexes
+
+#Error Documents
+ErrorDocument 403 https://bitpay.willtech.com.au/
+ErrorDocument 404 https://bitpay.willtech.com.au/
+ErrorDocument 500 https://bitpay.willtech.com.au/
+
+## Configure ETags
+FileETag MTime Size
+
+## Expires on for ETags and cache
+ExpiresActive on
+ExpiresDefault A604800
+ExpiresByType text/html A0
+ExpiresByType text/css A604800
+ExpiresByType text/javascript A604800
+ExpiresByType application/javascript A604800
+ExpiresByType application/x-javascript A604800
+ExpiresByType image/jpeg A604800
+ExpiresByType image/gif A604800
+ExpiresByType image/png A604800
+ExpiresByType application/x-shockwave-flash A604800
+ExpiresByType audio/mpeg A604800
+
+<Files favicon.ico>
+ExpiresActive on
+ExpiresDefault A0
+</Files>
+
+## Activate the mod_rewrite Engine
+RewriteEngine On
+RewriteCond %{HTTP_HOST} !^bitpay\.willtech\.com\.au [NC]
+RewriteRule ^(.*)$ https://bitpay.willtech.com.au/$1 [R=301,L]
