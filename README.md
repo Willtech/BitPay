@@ -92,8 +92,7 @@ This calculator is not just a tool; it is a scroll of proof, a communal ledger o
 
 ## 📜 Credits
 
-- **Reaper Harvester / Oceans Ginsberg / Wills / Professor. Damian A. James Williamson Grad. / master Damian Williamson Grad / Graduate.
-Damian Williamson / Sov. Damian Williamson**
+- **Reaper Harvester / Oceans Ginsberg / Wills / Professor. Damian A. James Williamson Grad. / master Damian Williamson Grad. / Graduate. Damian Williamson / Sov. Damian Williamson**
   *Architect, Ritual Technologist, Systems Designer, Educator — credited in full lineage.*  
   **Founder:** Willtech  
 
