@@ -1,4 +1,4 @@
-<?php
+<?PHP
 /**
  * File: index.php
  * Project: BTC Pay Calculator (PHP/HTML/JS)
@@ -82,6 +82,7 @@ $currencies = [
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>BTC Pay Calculator</title>
+<link rel="canonical" href="https://bitpay.willtech.com.au/">
 <style>
   :root {
     --blue: #1E90FF;         /* DodgerBlue */
@@ -159,6 +160,7 @@ $currencies = [
   .container-rel { position: relative; }
   .warn { color:#ffb3b3; font-size:12px; }
   .ok { color:#9ef19e; font-size:12px; }
+  #testNotification { font-size:10x; }
 </style>
 </head>
 <body>
@@ -236,7 +238,7 @@ $currencies = [
       <?php endif; ?>
     </div>
     <div>
-      <span>©2025 Reaper Harvester / Wills — with Microsoft Copilot — <a href="https://www.willtech.com.au/shop/terms-and-conditions/info_3.html" name="Terms of Service">Terms of Service</a></span>
+      <span>©2025 Reaper Harvester / Wills — with Microsoft Copilot — <a href="https://www.willtech.com.au/shop/terms-and-conditions/info_3.html" name="Terms of Service">Terms of Service</a> - <a href="#" id="testNotification">Test Notification</a></span>
     </div>
   </div>
 </div>
@@ -316,8 +318,11 @@ $currencies = [
       addrStatus.textContent = 'P2SH (compat)'; addrStatus.className = 'ok';
       monitorAddress(a);
     }
-    else { addrStatus.textContent = 'Unrecognized format'; addrStatus.className = 'warn'; }
-    monitorAddress(a);
+    else { 
+      addrStatus.textContent = 'Unrecognized format'; 
+      addrStatus.className = 'warn';
+      monitorAddress(a);
+    }
     updateVSizeByAddress(a);
     computeBTC();
   }
@@ -457,6 +462,9 @@ async function fetchPriceAndFees() {
     } catch (e) { alert('Could not save settings.'); }
   });
 
+let seenTxids = new Set();
+let initialized = false;
+
 function showNotification(amount) {
     const note = document.createElement('div');
     note.innerHTML = `
@@ -464,15 +472,19 @@ function showNotification(amount) {
             position:fixed;
             top:20px;
             left:50%;
-            transform:translateX(-50%);
+            transform: translateX(-50%) translateY(-6px); /* initial offset */
             background:#222;
             color:#fff;
             padding:15px 25px;
             border-radius:8px;
-            box-shadow:0 4px 10px rgba(0,0,0,0.3);
+            border: 1px solid #0f0;
+            box-shadow:0 4px 12px rgba(0,0,0,0.3);
+            pointer-events: none;
             font-family:sans-serif;
+            transition: opacity 0.3s ease, transform 0.3s ease;
             text-align:center;
             z-index:9999;
+            white-space: pre-line;
         ">
             <strong>Payment Received</strong><br>
             in mempool<br>
@@ -491,16 +503,33 @@ function monitorAddress(address) {
         fetch(`monitor_mempool_address.php?address=${encodeURIComponent(address)}`)
             .then(res => res.json())
             .then(data => {
-                if (data.received) {
-                    showNotification(data.amount_btc.toFixed(8));
+                if (!Array.isArray(data)) return;
+
+                if (!initialized) {
+                    // First poll: just record txids, no notifications
+                    data.forEach(tx => seenTxids.add(tx.txid));
+                    initialized = true;
+                } else {
+                    data.forEach(tx => {
+                        if (!seenTxids.has(tx.txid)) {
+                            seenTxids.add(tx.txid);
+                            showNotification(tx.amount_btc.toFixed(8));
+                        }
+                    });
                 }
             })
             .catch(err => console.error(err));
-    }, 10000); // every 10 seconds
+    }, 10000); // poll every 10s
 }
 
 // Example: call this after user enters their address in GUI
 // monitorAddress("18NRM5Sg71FXTmFkZTC19TGDmpqJxfpjg7");
+
+document.getElementById('testNotification').addEventListener('click', function(e) {
+    e.preventDefault();
+    // Inject transaction message
+    showNotification(`0.notification`);
+});
 
   // Initialize
   setAmountStr(amountDisplay.textContent || '0');
