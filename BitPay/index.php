@@ -320,7 +320,7 @@ $currencies = [
     }
     else { 
       addrStatus.textContent = 'Unrecognized format'; 
-      addrStatus.className = 'warn';
+      addrStatus.className = 'warn'; 
       monitorAddress(a);
     }
     updateVSizeByAddress(a);
