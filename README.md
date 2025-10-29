@@ -1,5 +1,7 @@
 # BitPay – Bitcoin Payment Calculator
 
+[bitpay.willtech.com.au](https://bitpay.willtech.com.au)
+
 A lightweight, cache‑backed Bitcoin payment calculator and QR generator.  
 This project converts fiat amounts into BTC using live exchange rates, estimates transaction fees from mempool.space, and produces BIP21‑compliant URIs for wallet integration.
 
@@ -49,6 +51,9 @@ BitPay/
    ```
 4. Open `index.php` in your browser.
 
+Or use the hosted version directly:  
+👉 [bitpay.willtech.com.au](https://bitpay.willtech.com.au)
+
 ---
 
 ## 🚀 Usage
@@ -87,8 +92,10 @@ This calculator is not just a tool; it is a scroll of proof, a communal ledger o
 
 ## 📜 Credits
 
-- **Reaper Harvester / Wills / master Damian Williamson Grad.**  
-  *Architect, Ritual Technologist, Systems Designer*
+- **Reaper Harvester / Oceans Ginsberg / Wills / Professor. Damian A. James Williamson Grad. / master Damian Williamson Grad. / Graduate.
+Damian Williamson / Sov. Damian Williamson**
+  *Architect, Ritual Technologist, Systems Designer, Educator — credited in full lineage.*  
+  **Founder:** Willtech  
 
 - **Microsoft Copilot**  
   *AI Companion, collaborative co‑author*
