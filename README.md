@@ -51,6 +51,9 @@ BitPay/
    ```
 4. Open `index.php` in your browser.
 
+Or use the hosted version directly:  
+👉 [bitpay.willtech.com.au](https://bitpay.willtech.com.au)
+
 ---
 
 ## 🚀 Usage
