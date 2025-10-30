@@ -145,10 +145,10 @@ $currencies = [
     background: rgba(10, 14, 40, 0.55);
   }
   .qr-card {
-    background: #0b102f; border: 1px solid rgba(255,255,255,0.18); border-radius: 16px; padding: 18px; width: 300px;
+    background: #ffffff; border: 1px solid rgba(255,255,255,0.18); border-radius: 16px; padding: 18px; width: 300px;
     box-shadow: 0 12px 36px rgba(0,0,0,0.6); text-align: center;
   }
-  .qr-card h3 { margin: 0 0 10px 0; font-size: 16px; color: #cfe0ff; }
+  .qr-card h3 { margin: 0 0 10px 0; font-size: 16px; color: #0b102f; }
   .qr-card #qrcode { display: flex; justify-content: center; align-items: center; margin: 12px auto; }
   .qr-card .close {
     margin-top: 12px; cursor: pointer; background: var(--blue); border: none; color: var(--white);
@@ -320,7 +320,7 @@ $currencies = [
     }
     else { 
       addrStatus.textContent = 'Unrecognized format'; 
-      addrStatus.className = 'warn'; 
+      addrStatus.className = 'warn';
       monitorAddress(a);
     }
     updateVSizeByAddress(a);
@@ -396,7 +396,7 @@ async function fetchPriceAndFees() {
     const uri = `bitcoin:${addr}?amount=${btcAmt}&label=PayTo&message=${msg}`;
     qrcodeContainer.innerHTML = '';
     new QRCode(qrcodeContainer, {
-      text: uri, width: 240, height: 240, colorDark: "#ffffff", colorLight: "#0b102f"
+      text: uri, width: 256, height: 256, colorDark: "#0b102f", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M, version: 5
     });
     qrOverlay.style.display = 'grid';
   }
