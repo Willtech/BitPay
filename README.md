@@ -154,5 +154,5 @@ This calculator is not just a tool; it is a scroll of proof, a communal ledger o
 
 ---
 
-[Excellence]: https://github.com/user-attachments/assets/bfe72d96-1be3-4397-8aa7-6e8781e8f604
+[Excellence]: https://github.com/Willtech/BitPay/blob/master/Images/Copilot_20251103_011044.png?raw=true
 
