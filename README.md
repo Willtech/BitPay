@@ -147,6 +147,13 @@ This calculator is not just a tool; it is a scroll of proof, a communal ledger o
 
 ---
 
+## 📂 License
+
+This project is licensed under terms defined in the MIT Licence.  
+Terms of Service: [Willtech](https://willtech.com.au/shop/terms-and-conditions/info_3.html)
+
+---
+
 ## 📚 References
 - [BIP21 – Bitcoin URI Specification](https://bips.xyz/21)  
 - [CoinGecko API](https://www.coingecko.com/en/api)  
