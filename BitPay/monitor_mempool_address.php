@@ -45,8 +45,14 @@
  * Created: 2025‑10‑28
  * Updated: 2025‑10‑30
  */
-
+ 
 header('Content-Type: application/json');
+
+$headers = getallheaders();
+
+if (!hash_equals($_SESSION['csrf_token'] ?? '', $headers['csrf_token'] ?? '')) {
+  echo json_encode(['ok' => false, 'error' => 'Invalid CSRF token.']); exit;
+}
 
 $address = $_GET['address'] ?? '';
 if (!$address) {
@@ -82,3 +88,4 @@ foreach ($data as $tx) {
 }
 
 echo json_encode($results);
+
