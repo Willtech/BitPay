@@ -17,6 +17,12 @@
 
 header('Content-Type: application/json');
 
+$headers = getallheaders();
+
+if (!hash_equals($_SESSION['csrf_token'] ?? '', $headers['csrf_token'] ?? '')) {
+  echo json_encode(['ok' => false, 'error' => 'Invalid CSRF token.']); exit;
+}
+
 $cacheFile = __DIR__ . '/data/prices.json';
 $ttl = 900; // 15 minutes
 $now = time();

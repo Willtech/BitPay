@@ -96,7 +96,7 @@ $currencies = [
     display: grid; place-items: center; min-height: 100vh;
   }
   .app {
-    width: 380px; max-width: 94vw; background: #0c1133; border: 1px solid rgba(255,255,255,0.12);
+    width: 390px; max-width: 94vw; background: #0c1133; border: 1px solid rgba(255,255,255,0.12);
     border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); overflow: hidden;
   }
   .topbar {
@@ -343,7 +343,15 @@ $currencies = [
 async function fetchPriceAndFees() {
     try {
       const cur = currencySelect.value.toLowerCase();
-      const res = await fetch('price.php', { cache: 'no-store' });
+      const res = await fetch('price.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'csrf_token': csrf
+        },
+        cache: 'no-store',
+        body: JSON.stringify({ currency: cur })
+    });
       const data = await res.json();
 
       if (data.prices && typeof data.prices[cur] === 'number') {
@@ -500,7 +508,15 @@ function showNotification(amount) {
 
 function monitorAddress(address) {
     setInterval(() => {
-        fetch(`monitor_mempool_address.php?address=${encodeURIComponent(address)}`)
+      fetch('monitor_mempool_address.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'csrf_token': csrf
+        },
+        cache: 'no-store',
+        body: JSON.stringify({ address })
+      })
             .then(res => res.json())
             .then(data => {
                 if (!Array.isArray(data)) return;
@@ -531,6 +547,11 @@ document.getElementById('testNotification').addEventListener('click', function(e
     showNotification(`0.notification`);
 });
 
+document.getElementById("enterKey").addEventListener("click", function () {
+  const counter = document.getElementById("usageCounter");
+  counter.src = "https://ctr.vendio.com/cgi-bin/honesty-counter.cgi?df=gen.35214878.3000000001262&ts=" + Date.now();
+});
+
   // Initialize
   setAmountStr(amountDisplay.textContent || '0');
   displayAddrStatus();
@@ -539,3 +560,4 @@ document.getElementById('testNotification').addEventListener('click', function(e
 </script>
 </body>
 </html>
+
