@@ -1,8 +1,3 @@
-Here’s the **full `README.md`** for your `api.php` endpoint, with the currency support integrated and written as a complete manual:
-
----
-
-```markdown
 # BitPay QR Payment API
 
 Standalone API endpoint for **bitpay.willtech.com.au** that generates Bitcoin payment QR codes or returns minimal JSON errors.  
@@ -19,7 +14,13 @@ Supports multiple fiat currencies via `/data/prices.json` (updated every 15 minu
   - Adds estimated miner fees + fixed extra sats.  
   - Builds a BIP21 URI.  
   - Returns a QR code (PNG) or JSON object.  
-- **Error handling:** Minimal, descriptive JSON errors only.
+- **Error handling:** Minimal, descriptive JSON errors only.  
+- **Security:**  
+  - Integrated SpamBlocker class logs/analyzes traffic.  
+  - CSRF token initialized in session.  
+  - CORS headers allow cross‑origin requests.  
+  - **Supports `OPTIONS` requests:** returns HTTP 204 with no body for preflight checks.  
+  - HTTPS strongly recommended in production.
 
 ---
 
@@ -32,8 +33,8 @@ Supports multiple fiat currencies via `/data/prices.json` (updated every 15 minu
 | `amount_btc`  | ❌       | flag   | If set to `1`, `amount` is treated as BTC directly.                         |
 | `currency`    | ❌       | string | Fiat currency code (default `AUD`). Supported: AUD, USD, EUR, GBP, JPY, CAD, NZD, CHF, SEK, NOK, DKK, SGD, HKD, CNY, INR, ZAR, BRL, MXN, TRY, PLN. Ignored if `amount_btc=1`. |
 | `rate`        | ❌       | number | Override fiat/BTC rate. Useful for testing or fallback.                     |
-| `blocks`      | ❌       | int    | Target confirmation blocks (default: 8).                                   |
-| `extra_sats`  | ❌       | int    | Fixed extra sats added to fee (default: 709).                              |
+| `blocks`      | ❌       | int    | Target confirmation blocks (default: 8). Selects fee tier.                  |
+| `extra_sats`  | ❌       | int    | Extra sats added to fee (default: 709).                                    |
 | `label`       | ❌       | string | Optional label for the payment URI.                                        |
 | `message`     | ❌       | string | Optional message (e.g., order ID).                                         |
 | `format`      | ❌       | string | Response format: `json` or `png` (default: `png`).                         |
@@ -44,7 +45,8 @@ Supports multiple fiat currencies via `/data/prices.json` (updated every 15 minu
 
 ### ✅ Success (PNG)
 - **Content-Type:** `image/png`  
-- **Body:** Binary PNG QR code encoding the BIP21 URI.
+- **Body:** Binary PNG QR code encoding the BIP21 URI.  
+- QR generated at 512×512, ECC=H, margin=1.
 
 ### ✅ Success (JSON)
 If `format=json` is specified:
@@ -53,124 +55,77 @@ If `format=json` is specified:
 {
   "uri": "bitcoin:18NRM5Sg71FXTmFkZTC19TC?amount=0.00007167&label=Willtech&message=Order%20#123",
   "amount_btc": "0.00007167",
-  "rate_currency_per_btc": "154858.00",
+  "rate_currency_per_btc": 154858.00,
   "currency": "AUD",
   "qr_png_data_url": "data:image/png;base64,iVBORw0KGgoAAAANS..."
 }
 ```
 
 ### ❌ Error (JSON)
-Minimal descriptive errors:
-
-```json
-{"error":"missing_address"}
-{"error":"invalid_address"}
-{"error":"missing_amount"}
-{"error":"invalid_amount"}
-{"error":"rate_unavailable"}
-{"error":"unsupported_currency"}
-{"error":"qr_failed"}
-```
+- **Validation errors:** HTTP 400 with concise JSON, e.g.  
+  ```json
+  { "error": "invalid_address" }
+  ```
+- **Rate unavailable:** Returned when `/data/prices.json` is missing, stale (>900s), or malformed.  
+  ```json
+  {
+    "error": "rate_unavailable",
+    "cache": { "lastUpdated": 1733380000, "prices": {}, "fees": {} }
+  }
+  ```
+- **QR failure:** If external QR service fails.  
+  ```json
+  { "error": "qr_failed" }
+  ```
 
 ---
 
 ## ⚙️ Fee Model
-
-- **Blocks target:** Default `8` (approx. ~8 blocks confirmation).  
-- **Extra sats:** Default `709`.  
-- **Fee calculation:**  
-  - Miner fee estimated via `estimateFeeSats(blocks)` (stubbed).  
-  - Converted to BTC and added to the base amount.  
-
-Formula:
-
-\[
-BTC_{due} = BTC_{base} + \frac{Fee_{sats}}{100{,}000{,}000}
-\]
+- Fee tiers sourced from mempool.space via `prices.json`:  
+  - ≤1 block → fastestFee  
+  - ≤3 blocks → halfHourFee  
+  - ≤6 blocks → hourFee  
+  - ≤8 blocks → eightBlockFee  
+  - >8 blocks → economyFee  
+- Fee = rate × txSize (≈180 vB). Minimum 1000 sats.  
+- `extra_sats` (default 709) added after estimation.
 
 ---
 
-## 🧮 Amount Handling
-
-- **BTC input (`amount_btc=1`):**  
-  - `amount` is taken directly as BTC.  
-  - Fee (sats → BTC) is added.  
-
-- **Fiat input (default AUD):**  
-  - Requires valid fiat/BTC rate from `/data/prices.json`.  
-  - Conversion:  
-
-    \[
-    BTC_{base} = \frac{FiatAmount}{Rate_{currency}}
-    \]
-
-  - Fee (sats → BTC) is added.  
+## 📂 Price Cache
+- File: `BitPay/data/prices.json`  
+- Updated by `price.php` every 15 minutes.  
+- Structure:  
+  - `lastUpdated` (epoch seconds)  
+  - `prices` (map of fiat codes to BTC rate)  
+  - `fees` (fastestFee, halfHourFee, hourFee, economyFee, eightBlockFee)  
+- TTL: 900 seconds. If stale, API returns `rate_unavailable`.
 
 ---
 
-## 📚 Examples
+## 🖥️ Curl Usage Examples
 
-### Example 1: AUD → BTC → QR PNG
+### Request PNG QR Code
+```bash
+curl "https://bitpay.willtech.com.au/api.php?address=bc1qexampleaddress&amount=50&currency=AUD"
 ```
-GET /api.php?address=18NRM5Sg71FXTmFkZTC19TC&amount=10&currency=AUD&format=png
+- Returns a PNG image (binary).  
+- Save to file:  
+  ```bash
+  curl -o qr.png "https://bitpay.willtech.com.au/api.php?address=bc1qexampleaddress&amount=50&currency=AUD"
+  ```
+
+### Request JSON Response
+```bash
+curl "https://bitpay.willtech.com.au/api.php?address=bc1qexampleaddress&amount=50&currency=AUD&format=json"
 ```
-- Returns PNG QR code for ~0.00007167 BTC.
+- Returns JSON with BIP21 URI, BTC amount, fiat rate, and embedded QR PNG data URL.
+
+### Preflight OPTIONS Request
+```bash
+curl -X OPTIONS -i "https://bitpay.willtech.com.au/api.php"
+```
+- Returns HTTP 204 with no body.  
+- Used by browsers for CORS preflight checks.
 
 ---
-
-### Example 2: BTC direct → JSON
-```
-POST /api.php
-{
-  "address": "18NRM5Sg71FXTmFkZTC19TC",
-  "amount": "0.00005",
-  "amount_btc": "1",
-  "format": "json"
-}
-```
-
-Response:
-```json
-{
-  "uri": "bitcoin:18NRM5Sg71FXTmFkZTC19TC?amount=0.00005709",
-  "amount_btc": "0.00005709",
-  "rate_currency_per_btc": null,
-  "currency": "BTC",
-  "qr_png_data_url": "data:image/png;base64,..."
-}
-```
-
----
-
-## 🛡️ Error Codes
-
-| Error                | Meaning                                      |
-|----------------------|----------------------------------------------|
-| `missing_address`    | No address provided.                         |
-| `invalid_address`    | Address format not recognized.               |
-| `missing_amount`     | No amount provided.                          |
-| `invalid_amount`     | Amount not numeric or ≤ 0.                   |
-| `rate_unavailable`   | Fiat conversion requested but no rate found. |
-| `unsupported_currency` | Currency not found in `/data/prices.json`. |
-| `qr_failed`          | QR generation failed.                        |
-
----
-
-## 📜 Credits
-
-- Artifact lineage: **Reaper Harvester / Willtech**  
-- Built with Microsoft Copilot collaboration.  
-- ©2025 Willtech – All rights reserved.  
-
----
-```
-
----
-
-### 🔧 Remaining Placeholders
-- **Fee estimation:** Currently a heuristic stub. Replace with mempool.space API or your own node’s fee estimator.  
-- **QR generation:** Currently calls a remote QR service. You can replace this with:
-  - **Server-side:** A PHP QR library (e.g., `phpqrcode`) for local generation.  
-  - **Client-side:** Your existing `qrcode.min.js` (from your repo) can be used in the browser to render QR codes dynamically from the BIP21 URI, avoiding server-side PNG generation.  
-
-Would you like me to show you how to wire `qrcode.min.js` into the **JSON response workflow**, so the API only returns the URI and your frontend renders the QR locally? That would eliminate the external PNG dependency.
