@@ -1,43 +1,40 @@
 <?php
 declare(strict_types=1);
 
-// --- DEBUG (remove after) ---
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-ini_set('log_errors', '1');
-error_reporting(E_ALL);
-
-// Capture fatals and emit JSON
-register_shutdown_function(function () {
-    $e = error_get_last();
-    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
-        header('Content-Type: application/json; charset=utf-8');
-        http_response_code(500);
-        echo json_encode([
-            'error' => 'fatal',
-            'type' => $e['type'],
-            'message' => $e['message'],
-            'file' => $e['file'],
-            'line' => $e['line'],
-        ]);
-    }
-});
-
-set_error_handler(function ($severity, $message, $file, $line) {
-    // Turn warnings/notices into exceptions so we see them
-    throw new ErrorException($message, 0, $severity, $file, $line);
-});
-// --- END DEBUG ---
 
 /**
+ * ============================================================================
  * BitPay QR Payment API (standalone)
- * - Accepts GET or POST.
- * - Returns a QR PNG (or JSON if format=json) with a BIP21 bitcoin URI.
- * - Minimal errors in JSON.
- * - Currency-aware: uses /data/prices.json updated by price.php every 15 min.
+ * ============================================================================
+ * Artifact lineage: Willtech / BitPay.willtech.com.au
+ * 
+ * Purpose:
+ *   - Provide a lightweight Bitcoin payment API endpoint.
+ *   - Accepts GET or POST requests with parameters (address, amount, currency).
+ *   - Returns either:
+ *       • A QR PNG image (default)
+ *       • A JSON object (if format=json) containing a BIP21-compliant bitcoin URI.
+ *
+ * Security:
+ *   - SpamBlocker integration for traffic logging and abuse control.
+ *   - CSRF token generation for session-bound requests.
+ *   - CORS headers allow safe cross-origin usage.
+ *
+ * Features:
+ *   - Currency-aware: pulls exchange rates from /data/prices.json (updated by price.php every 15 min).
+ *   - Dynamic fee estimation: selects sat/vByte tiers based on block target, with minimum fee floor.
+ *   - Minimal error payloads: JSON responses return concise error codes/messages.
+ *   - QR generation: produces BIP21 URIs for wallet compatibility.
+ *
+ * Notes:
+ *   - Designed for responsive integration with index.php frontend.
+ *   - All artifacts are intended to be inspectable, remixable, and reproducible.
+ *   - HTTPS strongly recommended in production deployments.
+ *
+ * ============================================================================
  */
- 
- // Include the spam blocker class
+
+// Include the spam blocker class
 use Reaper\Security\SpamBlocker;
 include 'spamblock/spam_blocker_class.php';
 
@@ -292,17 +289,49 @@ function isValidBitcoinAddress($addr)
 }
 
 /**
- * Fee estimation placeholder
+ * Estimate miner fee in satoshis based on confirmation target
  */
 function estimateFeeSats($blocks)
 {
     $blocks = (int)$blocks;
     if ($blocks < 1) $blocks = 1;
-    $oneBlockFee = 100 * 140; // placeholder integer
-    $val = round($oneBlockFee / $blocks);
+
+    // Load cached fee rates (from price.php or prices.json)
+    $feeData = @json_decode(@file_get_contents(__DIR__ . '/data/prices.json'), true);
+
+    // Fallback defaults if cache missing
+    $fastestFee   = isset($feeData['fastestFee'])   ? (int)$feeData['fastestFee']   : 3;
+    $halfHourFee  = isset($feeData['halfHourFee'])  ? (int)$feeData['halfHourFee']  : 2;
+    $hourFee      = isset($feeData['hourFee'])      ? (int)$feeData['hourFee']      : 1;
+    $economyFee   = isset($feeData['economyFee'])   ? (int)$feeData['economyFee']   : 1;
+    $eightBlockFee= isset($feeData['eightBlockFee'])? (int)$feeData['eightBlockFee']: 1;
+
+    // Select fee rate based on block target
+    if ($blocks <= 1) {
+        $rate = $fastestFee;
+    } elseif ($blocks <= 3) {
+        $rate = $halfHourFee;
+    } elseif ($blocks <= 6) {
+        $rate = $hourFee;
+    } elseif ($blocks <= 8) {
+        $rate = $eightBlockFee;
+    } else {
+        $rate = $economyFee;
+    }
+
+    // Approximate transaction size (vBytes)
+    // Adjust depending on address type (P2PKH, P2SH, Bech32)
+    $txSize = 180; // typical single-input, single-output
+
+    // Compute fee in satoshis
+    $val = $rate * $txSize;
+
+    // Ensure minimum fee floor
     $val = (int)max(1000, $val);
+
     return $val;
 }
+
 
 /**
  * Convert sats to BTC (avoid PHP 8 numeric literal underscores)
