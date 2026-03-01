@@ -1,6 +1,6 @@
 # BitPay – Bitcoin Payment Calculator
 
-[bitpay.willtech.com.au](https://bitpay.willtech.com.au)
+Live Example: [bitpay.willtech.com.au](https://bitpay.willtech.com.au)
 
 A lightweight, cache‑backed Bitcoin payment calculator and QR generator.  
 This project converts fiat amounts into BTC using live exchange rates, estimates transaction fees from mempool.space, and produces BIP21‑compliant URIs for wallet integration.
